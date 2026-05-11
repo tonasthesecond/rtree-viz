@@ -16,11 +16,19 @@ import { ConstructionGuide } from "./components/ConstructionGuide";
 import { QuerySelector } from "./components/QuerySelector";
 import { QueryGuide } from "./components/QueryGuide";
 import { ComparisonPanel } from "./components/ComparisonPanel";
+import { HoverProvider } from "./components/HoverContext";
 
 type Phase = "graph" | "construct" | "query" | "compare";
 
 const CANVAS_W = 600;
 const CANVAS_H = 500;
+
+const PHASES: Array<{ id: Phase; label: string }> = [
+  { id: "graph", label: "1. Graph" },
+  { id: "construct", label: "2. Build" },
+  { id: "query", label: "3. Query" },
+  { id: "compare", label: "4. Compare" },
+];
 
 export default function App() {
   const [phase, setPhase] = useState<Phase>("graph");
@@ -122,121 +130,153 @@ export default function App() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 24,
-        padding: 24,
-        fontFamily: "sans-serif",
-      }}
-    >
-      <div>
-        <GraphCanvas
-          graph={graph}
-          rtreeRoot={displayRoot}
-          highlightNodeIds={highlightNodeIds}
-          prunedNodeIds={prunedNodeIds}
-          queryRegion={queryRegion}
-          resultPointIds={resultPointIds}
-          queryPoint={queryPoint}
-          width={CANVAS_W}
-          height={CANVAS_H}
-          onCanvasClick={phase === "query" ? handleCanvasClick : undefined}
-        />
-      </div>
+    <HoverProvider graph={graph} rtreeRoot={displayRoot}>
+    <div className="app">
+      <header className="topbar">
+        <div className="topbar-title">
+          <h1>R-tree Visualizer</h1>
+          <small>step-through construction and querying</small>
+        </div>
+        <div className="phase-strip">
+          {PHASES.map((p) => (
+            <span
+              key={p.id}
+              className={`phase-chip ${phase === p.id ? "active" : ""}`}
+            >
+              {p.label}
+            </span>
+          ))}
+        </div>
+      </header>
 
-      <div style={{ flex: 1, maxWidth: 440 }}>
-        <h2 style={{ marginTop: 0 }}>R-tree Visualizer</h2>
+      <main className="layout">
+        <div className="card">
+          <GraphCanvas
+            graph={graph}
+            rtreeRoot={displayRoot}
+            highlightNodeIds={highlightNodeIds}
+            prunedNodeIds={prunedNodeIds}
+            queryRegion={queryRegion}
+            resultPointIds={resultPointIds}
+            queryPoint={queryPoint}
+            width={CANVAS_W}
+            height={CANVAS_H}
+            onCanvasClick={phase === "query" ? handleCanvasClick : undefined}
+          />
+        </div>
 
-        {phase === "graph" && (
-          <div>
-            <h3>1. Generate Graph</h3>
-            <label>
-              Points:{" "}
-              <input
-                type="number"
-                value={pointCount}
-                min={4}
-                max={26}
-                onChange={(e) => setPointCount(+e.target.value)}
-                style={{ width: 55 }}
+        <div className="card panel">
+          {phase === "graph" && (
+            <section>
+              <div className="section-header">
+                <h3>Generate graph</h3>
+              </div>
+              <div className="btn-row" style={{ alignItems: "center" }}>
+                <label className="field">
+                  Points
+                  <input
+                    type="number"
+                    value={pointCount}
+                    min={4}
+                    max={26}
+                    onChange={(e) => setPointCount(+e.target.value)}
+                    style={{ width: 60 }}
+                  />
+                </label>
+                <button onClick={handleRegenerate}>Regenerate</button>
+                <button className="primary" onClick={handleBuildRTree}>
+                  Build R-tree →
+                </button>
+              </div>
+              <p className="hint" style={{ marginTop: 10 }}>
+                Hover any node or point in the canvas to inspect its role in
+                the tree.
+              </p>
+            </section>
+          )}
+
+          {phase === "construct" && (
+            <section>
+              <div className="section-header">
+                <h3>R-tree construction</h3>
+              </div>
+              <ConstructionGuide
+                records={records}
+                currentStep={constructionStep}
+                onStepChange={setConstructionStep}
               />
-            </label>
-            <br />
-            <br />
-            <button onClick={handleRegenerate} style={{ marginRight: 8 }}>
-              Regenerate
-            </button>
-            <button onClick={handleBuildRTree}>Build R-tree →</button>
-          </div>
-        )}
+              <div className="btn-row" style={{ marginTop: 12 }}>
+                <button onClick={() => setPhase("graph")}>← Back</button>
+                <button className="primary" onClick={() => setPhase("query")}>
+                  Choose query →
+                </button>
+              </div>
+            </section>
+          )}
 
-        {phase === "construct" && (
-          <div>
-            <h3>2. R-tree Construction</h3>
-            <ConstructionGuide
-              records={records}
-              currentStep={constructionStep}
-              onStepChange={setConstructionStep}
-            />
-            <br />
-            <button
-              onClick={() => setPhase("graph")}
-              style={{ marginRight: 8 }}
-            >
-              ← Back
-            </button>
-            <button onClick={() => setPhase("query")}>Choose Query →</button>
-          </div>
-        )}
+          {phase === "query" && rtreeRoot && (
+            <section>
+              <div className="section-header">
+                <h3>Configure query</h3>
+              </div>
+              <QuerySelector
+                points={graph.points}
+                pendingQueryPoint={pendingQueryPoint}
+                onRun={handleRunQuery}
+              />
+              <div className="btn-row" style={{ marginTop: 12 }}>
+                <button
+                  onClick={() => {
+                    setPhase("construct");
+                    setPendingQueryPoint(null);
+                  }}
+                >
+                  ← Back
+                </button>
+              </div>
+            </section>
+          )}
 
-        {phase === "query" && rtreeRoot && (
-          <div>
-            <h3>3. Query</h3>
-            <QuerySelector
-              points={graph.points}
-              pendingQueryPoint={pendingQueryPoint}
-              onRun={handleRunQuery}
-            />
-            <br />
-            <button
-              onClick={() => {
-                setPhase("construct");
-                setPendingQueryPoint(null);
-              }}
-            >
-              ← Back
-            </button>
-          </div>
-        )}
-
-        {phase === "compare" && queryResult && exhaustiveResult && (
-          <div>
-            <h3>4. Query Steps</h3>
-            <QueryGuide
-              result={queryResult}
-              currentStep={queryStep}
-              onStepChange={setQueryStep}
-            />
-            <ComparisonPanel
-              queryResult={queryResult}
-              exhaustiveResult={exhaustiveResult}
-            />
-            <br />
-            <button
-              onClick={() => {
-                setPhase("query");
-                setQueryResult(null);
-                setActiveQueryParams(null);
-              }}
-              style={{ marginRight: 8 }}
-            >
-              ← New Query
-            </button>
-            <button onClick={handleRegenerate}>Regenerate Graph</button>
-          </div>
-        )}
-      </div>
+          {phase === "compare" && queryResult && exhaustiveResult && (
+            <>
+              <section>
+                <div className="section-header">
+                  <h3>Query steps</h3>
+                </div>
+                <QueryGuide
+                  result={queryResult}
+                  currentStep={queryStep}
+                  onStepChange={setQueryStep}
+                />
+              </section>
+              <section>
+                <div className="section-header">
+                  <h3>R-tree vs exhaustive</h3>
+                </div>
+                <ComparisonPanel
+                  queryResult={queryResult}
+                  exhaustiveResult={exhaustiveResult}
+                />
+              </section>
+              <section>
+                <div className="btn-row">
+                  <button
+                    onClick={() => {
+                      setPhase("query");
+                      setQueryResult(null);
+                      setActiveQueryParams(null);
+                    }}
+                  >
+                    ← New query
+                  </button>
+                  <button onClick={handleRegenerate}>Regenerate graph</button>
+                </div>
+              </section>
+            </>
+          )}
+        </div>
+      </main>
     </div>
+    </HoverProvider>
   );
 }

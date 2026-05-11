@@ -13,67 +13,31 @@ export function ComparisonPanel({ queryResult, exhaustiveResult }: Props) {
       : "—";
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <strong>R-tree vs Exhaustive Search</strong>
-      <table
-        style={{
-          borderCollapse: "collapse",
-          fontSize: 13,
-          marginTop: 8,
-          width: "100%",
-        }}
-      >
+    <div>
+      <table className="compare-table">
         <thead>
           <tr>
-            <th
-              style={{
-                textAlign: "left",
-                padding: "3px 10px",
-                borderBottom: "1px solid #ccc",
-              }}
-            />
-            <th style={{ padding: "3px 10px", borderBottom: "1px solid #ccc" }}>
-              R-tree
-            </th>
-            <th style={{ padding: "3px 10px", borderBottom: "1px solid #ccc" }}>
-              Exhaustive
-            </th>
+            <th />
+            <th style={{ textAlign: "right" }}>R-tree</th>
+            <th style={{ textAlign: "right" }}>Exhaustive</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ padding: "3px 10px" }}>Nodes / comparisons visited</td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {queryResult.rtreeNodeVisits}
-            </td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {exhaustiveResult.comparisons}
-            </td>
+            <td>Nodes / comparisons</td>
+            <td className="num">{queryResult.rtreeNodeVisits}</td>
+            <td className="num">{exhaustiveResult.comparisons}</td>
           </tr>
           <tr>
-            <td style={{ padding: "3px 10px" }}>Time (ms)</td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {queryResult.rtreeTimeMs.toFixed(3)}
-            </td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {exhaustiveResult.timeMs.toFixed(3)}
-            </td>
-          </tr>
-          <tr>
-            <td style={{ padding: "3px 10px" }}>Results found</td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {queryResult.resultPointIds.length}
-            </td>
-            <td style={{ textAlign: "center", padding: "3px 10px" }}>
-              {exhaustiveResult.resultPointIds.length}
-            </td>
+            <td>Results found</td>
+            <td className="num">{queryResult.resultPointIds.length}</td>
+            <td className="num">{exhaustiveResult.resultPointIds.length}</td>
           </tr>
         </tbody>
       </table>
-      <p style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
-        R-tree visited {ratio}× the work of exhaustive (
-        {queryResult.rtreeNodeVisits} vs {exhaustiveResult.comparisons}{" "}
-        comparisons).
+      <p className="compare-summary">
+        R-tree visited <strong>{ratio}×</strong> the work of exhaustive (
+        {queryResult.rtreeNodeVisits} vs {exhaustiveResult.comparisons}).
       </p>
     </div>
   );

@@ -8,6 +8,12 @@ interface Props {
   onRun: (params: QueryParams) => void;
 }
 
+const QUERY_LABELS: Record<QueryType, string> = {
+  range: "Range (rectangle)",
+  knn: "K-Nearest Neighbors",
+  point: "Point lookup",
+};
+
 export function QuerySelector({ points, pendingQueryPoint, onRun }: Props) {
   const [queryType, setQueryType] = useState<QueryType>("range");
   const [minX, setMinX] = useState(100);
@@ -30,93 +36,71 @@ export function QuerySelector({ points, pendingQueryPoint, onRun }: Props) {
 
   return (
     <div>
-      <div style={{ marginBottom: 10 }}>
-        {(["range", "knn", "point"] as QueryType[]).map((t) => (
-          <label key={t} style={{ marginRight: 14 }}>
+      <div className="radio-row">
+        {(Object.keys(QUERY_LABELS) as QueryType[]).map((t) => (
+          <label key={t}>
             <input
               type="radio"
               value={t}
               checked={queryType === t}
               onChange={() => setQueryType(t)}
-            />{" "}
-            {t === "range"
-              ? "Range (rectangle)"
-              : t === "knn"
-                ? "K-Nearest Neighbors"
-                : "Point lookup"}
+            />
+            {QUERY_LABELS[t]}
           </label>
         ))}
       </div>
 
       {queryType === "range" && (
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-            marginBottom: 10,
-          }}
-        >
+        <div className="field-grid" style={{ marginBottom: 12 }}>
           <label>
-            minX{" "}
+            minX
             <input
               type="number"
               value={minX}
               onChange={(e) => setMinX(+e.target.value)}
-              style={{ width: 60 }}
             />
           </label>
           <label>
-            minY{" "}
+            minY
             <input
               type="number"
               value={minY}
               onChange={(e) => setMinY(+e.target.value)}
-              style={{ width: 60 }}
             />
           </label>
           <label>
-            maxX{" "}
+            maxX
             <input
               type="number"
               value={maxX}
               onChange={(e) => setMaxX(+e.target.value)}
-              style={{ width: 60 }}
             />
           </label>
           <label>
-            maxY{" "}
+            maxY
             <input
               type="number"
               value={maxY}
               onChange={(e) => setMaxY(+e.target.value)}
-              style={{ width: 60 }}
             />
           </label>
         </div>
       )}
 
       {queryType === "knn" && (
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-            marginBottom: 10,
-          }}
-        >
-          <label>
-            k{" "}
+        <div style={{ marginBottom: 12 }}>
+          <label className="field" style={{ marginRight: 12 }}>
+            k
             <input
               type="number"
               value={k}
               min={1}
               max={points.length}
               onChange={(e) => setK(+e.target.value)}
-              style={{ width: 50 }}
+              style={{ width: 60 }}
             />
           </label>
-          <span style={{ fontSize: 13, color: "#666" }}>
+          <span className="hint">
             {pendingQueryPoint
               ? `Query point: (${pendingQueryPoint.x.toFixed(1)}, ${pendingQueryPoint.y.toFixed(1)})`
               : "Click the canvas to set query point"}
@@ -125,9 +109,9 @@ export function QuerySelector({ points, pendingQueryPoint, onRun }: Props) {
       )}
 
       {queryType === "point" && (
-        <div style={{ marginBottom: 10 }}>
-          <label>
-            Point{" "}
+        <div style={{ marginBottom: 12 }}>
+          <label className="field">
+            Point
             <select
               value={selectedPointId}
               onChange={(e) => setSelectedPointId(e.target.value)}
@@ -142,7 +126,9 @@ export function QuerySelector({ points, pendingQueryPoint, onRun }: Props) {
         </div>
       )}
 
-      <button onClick={handleRun}>Run Query</button>
+      <button className="primary" onClick={handleRun}>
+        Run query
+      </button>
     </div>
   );
 }

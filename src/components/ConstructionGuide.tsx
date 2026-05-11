@@ -1,4 +1,5 @@
 import type { InsertionRecord } from "../types/rtree";
+import { RichText } from "./RichText";
 
 interface Props {
   records: InsertionRecord[];
@@ -15,24 +16,22 @@ export function ConstructionGuide({
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
+      <div className="step-nav">
         <button
+          className="icon"
           onClick={() => onStepChange(Math.max(0, currentStep - 1))}
           disabled={currentStep === 0}
         >
           ←
         </button>
-        <span>
-          Insertion {currentStep + 1} / {records.length}
+        <span className="step-counter">
+          Insertion{" "}
+          <strong>
+            {currentStep + 1} / {records.length}
+          </strong>
         </span>
         <button
+          className="icon"
           onClick={() =>
             onStepChange(Math.min(records.length - 1, currentStep + 1))
           }
@@ -46,22 +45,21 @@ export function ConstructionGuide({
       </div>
 
       {record && (
-        <div>
-          <strong>
-            Inserting: {record.point.label} ({record.point.x.toFixed(1)},{" "}
-            {record.point.y.toFixed(1)})
-          </strong>
-          <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+        <div className="step-body">
+          <div className="step-title">
+            Inserting point <RichText text={record.point.label} />
+          </div>
+          <ul>
             {record.descriptionLines.map((line, i) => (
-              <li key={i} style={{ fontSize: 13, marginBottom: 4 }}>
-                {line}
+              <li key={i}>
+                <RichText text={line} />
               </li>
             ))}
           </ul>
           {record.rootGrew && (
-            <p style={{ color: "#c0392b", fontWeight: "bold", marginTop: 6 }}>
+            <div className="step-note warn">
               ↑ Root split — tree grew taller
-            </p>
+            </div>
           )}
         </div>
       )}

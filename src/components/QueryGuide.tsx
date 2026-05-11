@@ -1,4 +1,6 @@
 import type { QueryResult } from "../types/rtree";
+import { RichText } from "./RichText";
+import { useHover } from "./HoverContext";
 
 interface Props {
   result: QueryResult;
@@ -7,28 +9,30 @@ interface Props {
 }
 
 export function QueryGuide({ result, currentStep, onStepChange }: Props) {
+  const { graph } = useHover();
   const step = result.steps[currentStep];
+  const idToLabel = new Map(graph.points.map((p) => [p.id, p.label]));
+  const labelsFor = (ids: string[]) =>
+    ids.map((id) => idToLabel.get(id) ?? id).join(", ");
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
+      <div className="step-nav">
         <button
+          className="icon"
           onClick={() => onStepChange(Math.max(0, currentStep - 1))}
           disabled={currentStep === 0}
         >
           ←
         </button>
-        <span>
-          Step {currentStep + 1} / {result.steps.length}
+        <span className="step-counter">
+          Step{" "}
+          <strong>
+            {currentStep + 1} / {result.steps.length}
+          </strong>
         </span>
         <button
+          className="icon"
           onClick={() =>
             onStepChange(Math.min(result.steps.length - 1, currentStep + 1))
           }
@@ -42,24 +46,27 @@ export function QueryGuide({ result, currentStep, onStepChange }: Props) {
       </div>
 
       {step && (
-        <div>
-          <strong>{step.label}</strong>
-          <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+        <div className="step-body">
+          <div className="step-title">
+            <RichText text={step.label} />
+          </div>
+          <ul>
             {step.descriptionLines.map((line, i) => (
-              <li key={i} style={{ fontSize: 13, marginBottom: 4 }}>
-                {line}
+              <li key={i}>
+                <RichText text={line} />
               </li>
             ))}
           </ul>
           {step.prunedNodeIds.length > 0 && (
-            <p style={{ fontSize: 13, color: "#888", margin: "4px 0" }}>
-              ✗ Pruned: {step.prunedNodeIds.join(", ")}
-            </p>
+            <div className="step-note muted">
+              Pruned: <RichText text={step.prunedNodeIds.join(", ")} />
+            </div>
           )}
           {step.resultPointIds.length > 0 && (
-            <p style={{ fontSize: 13, color: "#27ae60", margin: "4px 0" }}>
-              ✓ Current results: [{step.resultPointIds.join(", ")}]
-            </p>
+            <div className="step-note good">
+              Current results: [
+              <RichText text={labelsFor(step.resultPointIds)} />]
+            </div>
           )}
         </div>
       )}

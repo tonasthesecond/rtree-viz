@@ -165,7 +165,7 @@ function insertRec(
     .join(", ");
 
   record.descriptionLines.push(
-    `At internal node ${node.id} (level ${node.level}): enlargements [${enlargements}]. ` +
+    `At internal node ${node.id}: enlargements [${enlargements}]. ` +
       `Choosing ${chosen.id} (min enlargement +${bestE.toFixed(1)}).`,
   );
 
@@ -213,9 +213,7 @@ export function buildRTree(points: Point[]): {
       pathNodeIds: [],
       splitNodeIds: [],
       rootGrew: false,
-      descriptionLines: [
-        `Inserting point ${point.label} at (${point.x.toFixed(1)}, ${point.y.toFixed(1)}).`,
-      ],
+      descriptionLines: [`Inserting point ${point.label}.`],
     };
 
     const result = insertRec(root, point, record);
@@ -224,7 +222,7 @@ export function buildRTree(points: Point[]): {
       root = makeInternal([result.node, result.split]);
       record.rootGrew = true;
       record.descriptionLines.push(
-        `Root split — new root ${root.id} created at level ${root.level}. Tree height: ${root.level + 1}.`,
+        `Root split — new root ${root.id} created. Tree height: ${root.level + 1}.`,
       );
     } else {
       root = result.node;

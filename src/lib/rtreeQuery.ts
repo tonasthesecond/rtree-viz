@@ -66,7 +66,7 @@ function rangeQuery(root: RTreeNode, params: RangeParams): QueryResult {
       steps.push({
         label: `Visit ${node.id}`,
         descriptionLines: [
-          `Internal node ${node.id} (level ${node.level}) intersects query. Descending into ${internal.children.length} children.`,
+          `Internal node ${node.id} intersects query. Descending into ${internal.children.length} children.`,
         ],
         visitedNodeIds: [node.id],
         prunedNodeIds: [],
@@ -141,7 +141,7 @@ function knnQuery(root: RTreeNode, params: KnnParams): QueryResult {
       steps.push({
         label: `Visit ${node.id}`,
         descriptionLines: [
-          `Internal node ${node.id} (level ${node.level}): enqueuing ${internal.children.length} children sorted by min-dist to query point.`,
+          `Internal node ${node.id}: enqueuing ${internal.children.length} children sorted by min-dist to query point.`,
         ],
         visitedNodeIds: [node.id],
         prunedNodeIds: [],
@@ -185,14 +185,15 @@ function pointQuery(
   const steps: QueryStep[] = [];
   let nodeVisits = 0;
   const found: string[] = [];
+  const t: Point = target;
 
   function visit(node: RTreeNode) {
     nodeVisits++;
-    if (!bboxContainsPoint(node.bbox, target.x, target.y)) {
+    if (!bboxContainsPoint(node.bbox, t.x, t.y)) {
       steps.push({
         label: `Prune ${node.id}`,
         descriptionLines: [
-          `Node ${node.id} bbox does not contain (${target.x.toFixed(1)}, ${target.y.toFixed(1)}) — pruned.`,
+          `Node ${node.id} bbox does not contain target ${t.label} — pruned.`,
         ],
         visitedNodeIds: [node.id],
         prunedNodeIds: [node.id],
@@ -203,15 +204,15 @@ function pointQuery(
 
     if (node.isLeaf) {
       const leaf = node as RTreeLeafNode;
-      const match = leaf.points.find((p) => p.id === target.id);
+      const match = leaf.points.find((p) => p.id === t.id);
       if (match) found.push(match.id);
       steps.push({
         label: `Scan leaf ${node.id}`,
         descriptionLines: [
           `Leaf ${node.id} contains target coordinate. Checking [${leaf.points.map((p) => p.label).join(", ")}].`,
           match
-            ? `Found ${target.label}.`
-            : `${target.label} not in this leaf.`,
+            ? `Found ${t.label}.`
+            : `${t.label} not in this leaf.`,
         ],
         visitedNodeIds: [node.id],
         prunedNodeIds: [],
